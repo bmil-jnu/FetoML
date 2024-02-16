@@ -9,10 +9,10 @@ Authors: Myeonghyeon Jeong, Sunyong Yoo
 We present FetoML, a model that can provide interpretable predictions of fetal toxicity of drugs using various machine learning approaches.
 You can find the data and source code used in the paper.
 In addition, we provide a Python file that can be used to generate predictions from the model we trained.
-- [Dataset]()
-- [Model source codes]()
-- [Hyperparameter optimization]()
-- [Prediction analysis codes]()
+- [Dataset](https://github.com/bmil-jnu/FetoML/tree/main/Data)
+- [Model source codes](https://github.com/bmil-jnu/FetoML/tree/main/Model%20Code/Model)
+- [Hyperparameter optimization](https://github.com/bmil-jnu/FetoML/tree/main/Model%20Code/Hyperparameter%20Optimization)
+- [Prediction analysis codes](https://github.com/bmil-jnu/FetoML/tree/main/Model%20Code/Analysis)
 
 ## Dependency
 
@@ -30,19 +30,21 @@ How the prediction of fetotoxicity of drugs is done through the model we propose
 
 **Command:**
 
-`python FetoML.py -input input.csv -model model_name`
+`python FetoML.py -input input.csv -model model_name -output output_name`
 
-- input.csv: Fill in the csv file you want to predict. The columns in the csv file must contain 'name', 'smiles', and 'category'. Also, the location of the csv file must exist in the **'Data'** folder.
+- `input.csv`: Fill in the csv file you want to predict. The columns in the csv file must contain 'name', 'smiles', and 'category'. Also, the location of the csv file must exist in the **'Data'** folder.
   
-- model: Enter the model you want to use for your prediction. The model input must be chosen from 'LR', 'SVM', 'RF', 'ET', 'GBM', 'XGB', or 'NN'. Alternatively, you can enter 'all' or 'recommend'.
+- `model`: Enter the model you want to use for your prediction. The model input must be chosen from 'LR', 'SVM', 'RF', 'ET', 'GBM', 'XGB', or 'NN'. Alternatively, you can enter 'all' or 'recommend'.
   
     - `all`: You can have results from all available models.
     - `recommend`: You can have results from the models recommended in the paper (ET and NN models).
     - Selecting more than one model to get results: Enter two or more models separated by ',' but cannot include `all` or `recommend`. Example: `RF,ET,NN`
+  
+- `output_name`: Enter a name to distinguish the file you'll receive as a result. The csv file will be output in the form of `{output_name}_{model_name}_predict_result.csv` in the **'Results'** folder.
     
 **Example:**
 
-``python FetoML.py -input fetal_toxicity_Test.csv -model recommend``
+`python FetoML.py -input fetal_toxicity_Test.csv -model recommend -output sample`
     
 ### Using hyperparameters from our proposed model to make predictions after training on a new training set
 

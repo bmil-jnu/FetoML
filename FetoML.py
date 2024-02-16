@@ -13,6 +13,7 @@ import sys
 # User inputs
 args = sys.argv
 input_file = args[args.index('-input') + 1]
+output_name = args[args.index('-output') + 1]
 user_model = args[args.index('-model') + 1]
 model_list = user_model.split(',')
 
@@ -182,7 +183,7 @@ def model_prediction(model_name):
     output_df = pd.concat([df_test[['name', 'smiles']], output_probability, output_binary.astype(str)], axis=1)
     output_df.columns = ['name', 'smiles', 'probability', 'output']
     output_df['output'] = output_df['output'].apply(lambda _: str(_))
-    output_df.to_csv(f'Results/{model_name}_predict_result.csv', encoding='cp949', index=False)
+    output_df.to_csv(f'Results/[{output_name}]_{model_name}_predict_result.csv', encoding='cp949', index=False)
 
 classifiers = {'LR': LR_model,
                'SVM': SVC_model,
