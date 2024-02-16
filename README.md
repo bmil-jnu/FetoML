@@ -24,6 +24,30 @@ In addition, we provide a Python file that can be used to generate predictions f
 
 ## How to use
 
+### Predictions with already trained models
+
+How the prediction of fetotoxicity of drugs is done through the model we proposed.
+
+**Command:**
+
+`python FetoML.py -input input.csv -model model_name`
+
+- input.csv: Fill in the csv file you want to predict. The columns in the csv file must contain 'name', 'smiles', and 'category'. Also, the location of the csv file must exist in the **'Data'** folder.
+  
+- model: Enter the model you want to use for your prediction. The model input must be chosen from 'LR', 'SVM', 'RF', 'ET', 'GBM', 'XGB', or 'NN'. Alternatively, you can enter 'all' or 'recommend'.
+  
+    - `all`: You can have results from all available models.
+    - `recommend`: You can have results from the models recommended in the paper (ET and NN models).
+    - Selecting more than one model to get results: Enter two or more models separated by ',' but cannot include `all` or `recommend`. Example: `RF,ET,NN`
+    
+**Examples:**
+
+``python FetoML.py -input fetal_toxicity_Test.csv -model recommend``
+    
+### Using hyperparameters from our proposed model to make predictions after training on a new training set
+
+You can use it to train on new training data, or when you want to perform a comparison with the model structures we proposed.
+
 
 
 # Contacts

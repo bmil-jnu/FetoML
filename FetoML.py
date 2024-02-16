@@ -7,11 +7,41 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import QED
 import joblib
 from tensorflow.keras import regularizers
+import os
+import sys
 
+# User inputs
+args = sys.argv
+input_file = args[args.index('-input') + 1]
+user_model = args[args.index('-model') + 1]
+model_list = user_model.split(',')
 
-user_model_selection = 'all'
+classifier_list = ['LR', 'SVM', 'RF', 'ET', 'GBM', 'XGB', 'NN']
 
-df_test = pd.read_csv('Data/fetal_toxicity_Test.csv', encoding='cp949')
+if len(model_list) == 1:
+    if model_list[0] == 'all':
+        user_model_selection = classifier_list
+    elif model_list[0] == 'recommend':
+        user_model_selection = ['ET', 'NN']
+    else:
+        raise ValueError('Please check the entered argument')
+
+else:
+    if 'all' in model_list or 'recommend' in model_list:
+        raise ValueError('Please check the "how to use" in Readme file')
+    else:
+        check_invalid_model = [item for item in model_list if item not in classifier_list]
+        if check_invalid_model:
+            raise ValueError('Please check the entered argument')
+        else:
+            user_model_selection = model_list
+
+# Model Code directory definition
+cur_dir = os.getcwd()
+cur_dir = cur_dir.replace('\\', '/')
+model_dir = cur_dir + '/Model Code/'
+
+df_test = pd.read_csv(f'Data/{input_file}', encoding='cp949')
 df_test = df_test[['name', 'smiles', 'category']]
 
 test_mols = [Chem.MolFromSmiles(smiles) for smiles in df_test["smiles"]]
@@ -51,7 +81,7 @@ for i in range(len(fps)):
 test_x = np.stack([i.tolist() for i in arr_list])
 test_finprt = pd.DataFrame(test_x)
 
-scaler_file_path = 'Model/standard_scaler_inform.pkl'
+scaler_file_path = os.path.join(model_dir, 'Model/standard_scaler_inform.pkl')
 sds_scaler = joblib.load(scaler_file_path)
 
 test_qe = [QED.properties(mol) for mol in test_mols]
@@ -81,27 +111,27 @@ X_test_nn = np.asarray(X_test).astype('float64')
 Y_test_nn = np.asarray(Y_test).astype('float64')
 
 # Logistic Regression
-LR_model_file_path = 'Model/LogisticRegression.pkl'
+LR_model_file_path = os.path.join(model_dir, 'Model/LogisticRegression.pkl')
 LR_model = joblib.load(LR_model_file_path)
 
 # Support Vector Machine
-SVC_model_file_path = 'Model/SVC.pkl'
+SVC_model_file_path = os.path.join(model_dir, 'Model/SVC.pkl')
 SVC_model = joblib.load(SVC_model_file_path)
 
 # Random Forest
-RF_model_file_path = 'Model/RandomForestClassifier.pkl'
+RF_model_file_path = os.path.join(model_dir, 'Model/RandomForestClassifier.pkl')
 RF_model = joblib.load(RF_model_file_path)
 
 # Extra Trees
-ET_model_file_path = 'Model/ExtraTreesClassifier.pkl'
+ET_model_file_path = os.path.join(model_dir, 'Model/ExtraTreesClassifier.pkl')
 ET_model = joblib.load(ET_model_file_path)
 
 # Gradient Boosting Machine
-GBM_model_file_path = 'Model/GradientBoostingClassifier.pkl'
+GBM_model_file_path = os.path.join(model_dir, 'Model/GradientBoostingClassifier.pkl')
 GBM_model = joblib.load(GBM_model_file_path)
 
 # eXtreme Gradient Boosting
-XGB_model_file_path = 'Model/XGBClassifier.pkl'
+XGB_model_file_path = os.path.join(model_dir, 'Model/XGBClassifier.pkl')
 XGB_model = joblib.load(XGB_model_file_path)
 
 # Self-attention-based neural network
@@ -111,32 +141,48 @@ regularizer = regularizers.l2(0.001)
 
 # 모델 세부 설정
 inputs = tf.keras.layers.Input(shape=(input_dim,))
-dense_v = tf.keras.layers.Dense(input_dim, activation = None)(inputs)
-attn_score = tf.keras.layers.Softmax(axis = -1)(dense_v)
+dense_v = tf.keras.layers.Dense(input_dim, activation=None)(inputs)
+attn_score = tf.keras.layers.Softmax(axis=-1)(dense_v)
 cal_score = tf.math.multiply(inputs, attn_score)
-Dense1 = tf.keras.layers.Dense(116, activation = 'relu',
-                          kernel_initializer = initializer, kernel_regularizer=regularizer)(cal_score)
+Dense1 = tf.keras.layers.Dense(116, activation='relu',
+                               kernel_initializer=initializer, kernel_regularizer=regularizer)(cal_score)
 Dense1_BN = tf.keras.layers.BatchNormalization()(Dense1)
-Dense2 = tf.keras.layers.Dense(32, activation = 'relu',
-                          kernel_initializer = initializer, kernel_regularizer=regularizer)(Dense1)
+Dense2 = tf.keras.layers.Dense(32, activation='relu',
+                               kernel_initializer=initializer, kernel_regularizer=regularizer)(Dense1)
 Dense2_BN = tf.keras.layers.BatchNormalization()(Dense2)
-outputs = tf.keras.layers.Dense(1, activation = 'sigmoid')(Dense2_BN)
+outputs = tf.keras.layers.Dense(1, activation='sigmoid')(Dense2_BN)
 
 NN_model = tf.keras.Model(inputs=inputs, outputs=outputs)
 
-NN_model.load_weights("Model/attention_best.h5")
+NN_model.load_weights(os.path.join(model_dir, "Model/attention_best.h5"))
+
+model_thd = {LR_model: 0.227574,
+             SVC_model: 0.053477,
+             RF_model: 0.114286,
+             ET_model: 0.074573,
+             GBM_model: 0.424566,
+             XGB_model: 0.125577,
+             NN_model: 0.002422}
+
 
 def model_prediction(model_name):
     cls = classifiers.get(model_name)
     if cls is XGB_model:
         pred_z = cls.predict_proba(X_test_arr)[:, 1]
     elif cls is NN_model:
-        pred_z = cls.predict(X_test_nn)
+        pred_z = cls.predict(X_test_nn)[:, -1]
     else:
         pred_z = cls.predict_proba(X_test)[:, 1]
-    prediction_result = pd.Series(pred_z)
-    output_df = pd.concat([df_test, prediction_result], axis=1)
+    output_probability = pd.Series(pred_z[:])
+    predict_result = pred_z.copy()
+    predict_result = predict_result[predict_result >= model_thd.get(cls)]
+    predict_result = predict_result[predict_result < model_thd.get(cls)]
+    output_binary = pd.Series(predict_result)
+
+    output_df = pd.concat([df_test[['name', 'smiles']], output_probability, output_binary], axis=1)
+    output_df.columns = ['name', 'smiles', 'probability', 'output']
     output_df.to_csv(f'Results/{model_name}_predict_result.csv', encoding='cp949', index=False)
+
 
 classifiers = {'LR': LR_model,
                'SVM': SVC_model,
@@ -146,10 +192,7 @@ classifiers = {'LR': LR_model,
                'XGB': XGB_model,
                'NN': NN_model}
 
-classifier_list = ['LR', 'SVM', 'RF', 'ET', 'GBM', 'XGB', 'NN']
+for a in user_model_selection:
+    model_prediction(model_name=a)
 
-if user_model_selection == 'all':
-    for a in classifier_list:
-        model_prediction(model_name=a)
-else:
-    model_prediction(model_name=user_model_selection)
+print('-*-*' * 20 + '\nIf you checked this message, the result was generated without any issues.\n' + '-*-*' * 20)
