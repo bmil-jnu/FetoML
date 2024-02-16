@@ -40,7 +40,7 @@ How the prediction of fetotoxicity of drugs is done through the model we propose
     - `recommend`: You can have results from the models recommended in the paper (ET and NN models).
     - Selecting more than one model to get results: Enter two or more models separated by ',' but cannot include `all` or `recommend`. Example: `RF,ET,NN`
     
-**Examples:**
+**Example:**
 
 ``python FetoML.py -input fetal_toxicity_Test.csv -model recommend``
     

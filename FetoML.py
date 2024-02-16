@@ -175,14 +175,14 @@ def model_prediction(model_name):
         pred_z = cls.predict_proba(X_test)[:, 1]
     output_probability = pd.Series(pred_z[:])
     predict_result = pred_z.copy()
-    predict_result = predict_result[predict_result >= model_thd.get(cls)]
-    predict_result = predict_result[predict_result < model_thd.get(cls)]
+    predict_result[predict_result >= model_thd.get(cls)] = '1'
+    predict_result[predict_result < model_thd.get(cls)] = '0'
     output_binary = pd.Series(predict_result)
 
-    output_df = pd.concat([df_test[['name', 'smiles']], output_probability, output_binary], axis=1)
+    output_df = pd.concat([df_test[['name', 'smiles']], output_probability, output_binary.astype(str)], axis=1)
     output_df.columns = ['name', 'smiles', 'probability', 'output']
+    output_df['output'] = output_df['output'].apply(lambda _: str(_))
     output_df.to_csv(f'Results/{model_name}_predict_result.csv', encoding='cp949', index=False)
-
 
 classifiers = {'LR': LR_model,
                'SVM': SVC_model,
