@@ -129,7 +129,7 @@ input_dim = X_train.shape[1]
 initializer = tf.keras.initializers.HeNormal()
 
 # L2 regularizer 설정
-regularizer = regularizers.l2(0.001)
+regularizer = regularizers.l2(0.01)
 
 # 모델 하이퍼 파라미터 (epochs, batch_size)
 epochs = 200

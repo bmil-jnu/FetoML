@@ -43,7 +43,7 @@ cur_dir = cur_dir.replace('\\', '/')
 model_dir = cur_dir + '/Model Code/'
 
 df_test = pd.read_csv(f'Data/{input_file}', encoding='cp949')
-df_test = df_test[['name', 'smiles', 'category']]
+df_test = df_test[['name', 'smiles']]
 
 test_mols = [Chem.MolFromSmiles(smiles) for smiles in df_test["smiles"]]
 
@@ -100,16 +100,13 @@ test_chem['ALOGP'] = test_qe['ALOGP']
 test_chem['PSA'] = test_qe['PSA']
 test_chem[['HBOND', 'ALOGP', 'PSA']] = sds_scaler.transform(test_chem[['HBOND', 'ALOGP', 'PSA']])
 
-test_input = pd.concat([test_finprt, test_chem, df_test['category']], axis=1)
+test_input = pd.concat([test_finprt, test_chem], axis=1)
 
-X_test = test_input.iloc[:, :-1]
-Y_test = test_input.iloc[:, -1]
+X_test = test_input.iloc[:, :]
 
 X_test_arr = X_test.values
-Y_test_arr = Y_test.values
 
 X_test_nn = np.asarray(X_test).astype('float64')
-Y_test_nn = np.asarray(Y_test).astype('float64')
 
 # Logistic Regression
 LR_model_file_path = os.path.join(model_dir, 'Model/LogisticRegression.pkl')
